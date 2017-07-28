@@ -5,22 +5,29 @@
 #include <glib.h>
 
 struct adcusb_device;
-typedef struct adcusb_device adcusb_device_t;
+typedef struct adcusb_device *adcusb_device_t;
 
 struct adcusb_data_block
 {
+	uint32_t	adb_seqno;
+	int		adb_format;
 
 };
 
 typedef void (^adcusb_callback_t)(struct adcusb_device *,
-    struct adcusb_data_block *, void *);
+    struct adcusb_data_block *);
 
-int adcusb_open_by_serial(const char *serial, struct adcusb_device **device);
-int adcusb_open_by_address(int address);
-void adcusb_set_callback(struct adcusb_device *dev, adcusb_callback_t cb,
-    void *arg);
-int acdusb_start(struct adcusb_device *dev);
-void adcusb_stop(struct adcusb_device *dev);
-void adcusb_close(struct adcusb_device *dev);
+#define	ADCUSB_CALLBACK(_fn, _arg) 					\
+    ^(struct adcusb_device *_dev, struct adcusb_data_block *_blk) {	\
+        _fn(_arg, _dev, _blk);						\
+    }
+
+int adcusb_open_by_serial(const char *serial, adcusb_device_t *devp);
+int adcusb_open_by_address(int address, adcusb_device_t *devp);
+void adcusb_set_buffer_size(adcusb_device_t dev, size_t bufsize);
+void adcusb_set_callback(adcusb_device_t dev, adcusb_callback_t cb);
+int acdusb_start(adcusb_device_t dev);
+void adcusb_stop(adcusb_device_t dev);
+void adcusb_close(adcusb_device_t dev);
 
 #endif
