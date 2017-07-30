@@ -18,8 +18,11 @@ include_directories (${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
 
 add_library(libadcusb SHARED ${SOURCE_FILES})
+target_link_libraries(libadcusb ${GLIB_LIBRARIES})
 target_link_libraries(libadcusb ${LIBUSB_LIBRARIES})
 
 if(NOT APPLE)
     target_link_libraries(libadcusb BlocksRuntime)
 endif()
+
+add_subdirectory(examples/read)

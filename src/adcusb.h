@@ -9,8 +9,9 @@ typedef struct adcusb_device *adcusb_device_t;
 
 struct adcusb_data_block
 {
-	uint32_t	adb_seqno;
-	int		adb_format;
+	uint64_t	adb_seqno;
+	uint32_t 	adb_count;
+	uint32_t 	adb_samples[];
 
 };
 
@@ -26,7 +27,7 @@ int adcusb_open_by_serial(const char *serial, adcusb_device_t *devp);
 int adcusb_open_by_address(int address, adcusb_device_t *devp);
 void adcusb_set_buffer_size(adcusb_device_t dev, size_t bufsize);
 void adcusb_set_callback(adcusb_device_t dev, adcusb_callback_t cb);
-int acdusb_start(adcusb_device_t dev);
+int adcusb_start(adcusb_device_t dev);
 void adcusb_stop(adcusb_device_t dev);
 void adcusb_close(adcusb_device_t dev);
 
