@@ -29,7 +29,7 @@ callback(void *arg, adcusb_device_t dev, struct adcusb_data_block *block)
 
 	(void)arg;
 	(void)dev;
-	printf("Read block: %u samples, seqno %lu\n", block->adb_count,
+	printf("Read block: %u samples, seqno %llu\n", block->adb_count,
 	    block->adb_seqno);
 }
 
