@@ -54,10 +54,12 @@ adcusb_open_by_serial(const char *serial, struct adcusb_device **devp)
 			continue;
 		}
 
-		if (g_strcmp0((char *)strdesc, serial) != 0)
+		if (g_strcmp0((char *)strdesc, serial) != 0) {
+			libusb_close(dev->ad_handle);
 			continue;
+		}
 
-		if (libusb_claim_interface(dev->ad_handle, 1) != 0) {
+		if (libusb_claim_interface(dev->ad_handle, 0) != 0) {
 			libusb_close(dev->ad_handle);
 			goto fail;
 		}
@@ -92,7 +94,7 @@ adcusb_open_by_address(int address, struct adcusb_device **devp)
 		if (libusb_open(*devices, &dev->ad_handle) != 0)
 			goto fail;
 
-		if (libusb_claim_interface(dev->ad_handle, 1) != 0) {
+		if (libusb_claim_interface(dev->ad_handle, 0) != 0) {
 			libusb_close(dev->ad_handle);
 			goto fail;
 		}
@@ -121,12 +123,12 @@ adcusb_start(struct adcusb_device *dev)
 	dev->ad_libusb_thread = g_thread_new("adcusb", adcusb_libusb_thread, dev);
 	dev->ad_transfer = true;
 	dev->ad_buffer = g_malloc0(10 * 576);
-	dev->ad_xfer = libusb_alloc_transfer(1);
+	dev->ad_xfer = libusb_alloc_transfer(10);
 	dev->ad_buffer_size = 5760;
 
 	libusb_fill_iso_transfer(dev->ad_xfer, dev->ad_handle,
-	    2 | LIBUSB_ENDPOINT_IN,
-	    (uint8_t *)dev->ad_buffer, 576, 1,
+	    1 | LIBUSB_ENDPOINT_IN,
+	    (uint8_t *)dev->ad_buffer, 576, 10,
 	    adcusb_transfer_cb, dev, 1000);
 
 	libusb_set_iso_packet_lengths(dev->ad_xfer, 576);
