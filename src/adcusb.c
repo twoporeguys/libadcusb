@@ -120,15 +120,16 @@ int
 adcusb_start(struct adcusb_device *dev)
 {
 
+	dev->ad_running = true;
 	dev->ad_libusb_thread = g_thread_new("adcusb", adcusb_libusb_thread, dev);
 	dev->ad_transfer = true;
-	dev->ad_buffer = g_malloc0(10 * 576);
-	dev->ad_xfer = libusb_alloc_transfer(10);
-	dev->ad_buffer_size = 5760;
+	dev->ad_buffer = g_malloc0(100 * 576);
+	dev->ad_xfer = libusb_alloc_transfer(100);
+	dev->ad_buffer_size = 576 * 100;
 
 	libusb_fill_iso_transfer(dev->ad_xfer, dev->ad_handle,
 	    1 | LIBUSB_ENDPOINT_IN,
-	    (uint8_t *)dev->ad_buffer, 576, 10,
+	    (uint8_t *)dev->ad_buffer, 576, 100,
 	    adcusb_transfer_cb, dev, 1000);
 
 	libusb_set_iso_packet_lengths(dev->ad_xfer, 576);
@@ -155,12 +156,14 @@ static void
 adcusb_transfer_cb(struct libusb_transfer *xfer)
 {
 	struct adcusb_device *dev = xfer->user_data;
+	struct adcusb_data_block *block;
 	struct libusb_iso_packet_descriptor *iso;
 	int i;
 
 	for (i = 0; i < xfer->num_iso_packets; i++) {
 		iso = &xfer->iso_packet_desc[i];
-		dev->ad_callback(dev, NULL);
+		block = (struct adcusb_data_block *)&xfer->buffer[576 * i];
+		dev->ad_callback(dev, block);
 	}
 
 	libusb_submit_transfer(xfer);
