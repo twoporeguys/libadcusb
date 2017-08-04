@@ -2,7 +2,6 @@
 #define LIBADCUSB_H
 
 #include <libusb-1.0/libusb.h>
-#include <glib.h>
 
 struct adcusb_device;
 typedef struct adcusb_device *adcusb_device_t;

@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <glib.h>
 #include <libusb-1.0/libusb.h>
-#include "adcusb.h"
+#include <adcusb.h>
 
 static void adcusb_transfer_cb(struct libusb_transfer *);
 static void *adcusb_libusb_thread(void *);
