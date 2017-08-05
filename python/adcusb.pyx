@@ -38,7 +38,7 @@ cdef class ADCDataBlock(object):
 
     property samples:
         def __get__(self):
-            return self.block.adb_samples[:self.block.adb_count]
+            return # XXX self.block.adb_samples[:self.block.adb_count]
 
 
 cdef class ADC(object):

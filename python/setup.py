@@ -6,6 +6,7 @@
 #
 
 import os
+import numpy as np
 import Cython.Compiler.Options
 Cython.Compiler.Options.annotate = True
 
@@ -26,8 +27,9 @@ setup(
         Extension(
             "adcusb",
             ["adcusb.pyx"],
-            extra_compile_args=["-fblocks"],
+            extra_compile_args=["-fblocks", "-Wno-sometimes-uninitialized"],
             extra_link_args=["-g", "-ladcusb"],
+            include_dirs=[np.get_include()]
         )
     ]
 )
