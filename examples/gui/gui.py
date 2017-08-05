@@ -59,10 +59,15 @@ class Context(object):
     def process_command(self, command):
         tokens = re.split(r'(?<!\\) ', command)
         tokens = [t.replace('\ ', ' ') for t in tokens]
-        args = [eval(s) for s in tokens[1:]]
+
+        try:
+            args = [eval(s) for s in tokens[1:]]
+        except:
+            return '<invalid>', '<syntax error>'
+
         request = librpc.Object({
             'name': tokens[0],
-            'args': tokens[1:]
+            'args': args
         })
 
         if self.connection is None:
