@@ -17,10 +17,11 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib
 
 
-RESPONSE_TEMPLATE = """<span bgcolor="green">Request:</span>
-<small><tt>{0}</tt></small>
-<span bgcolor="red">Response:</span>
-<small><tt>{1}</tt></small>
+RESPONSE_TEMPLATE = """<tt><b>Request:</b>
+{0}
+<b>Response:</b>
+{1}
+</tt>
 """
 
 
@@ -28,14 +29,21 @@ class Context(object):
     def __init__(self):
         self.rpipe, self.wpipe = os.pipe()
         self.bus = librpc.Bus()
+        self.bus.event_handler = self.bus_event
         self.set_status = None
         self.write_log = None
+        self.hotplug_callback = None
         self.device = None
         self.connection = None
         self.reader_thread = None
         self.ping_thread = None
 
-    def connection_error(self, reason):
+    def bus_event(self, event, node):
+        print(event, node)
+        if self.hotplug_callback:
+            self.hotplug_callback(event, node)
+
+    def connection_error(self, reason, args):
         print(reason)
 
     def connect(self, node):
@@ -52,11 +60,20 @@ class Context(object):
         tokens = re.split(r'(?<!\\) ', command)
         tokens = [t.replace('\ ', ' ') for t in tokens]
         args = [eval(s) for s in tokens[1:]]
+        request = librpc.Object({
+            'name': tokens[0],
+            'args': tokens[1:]
+        })
 
         if self.connection is None:
             raise RuntimeError("Not connected")
 
-        return self.connection.call_sync(tokens[0], *args)
+        try:
+            response = self.connection.call_sync(tokens[0], *args)
+        except librpc.RpcException as err:
+            response = 'Error: {0}'.format(err)
+
+        return request, response
 
     def log_reader(self):
         f = os.fdopen(self.rpipe)
@@ -89,12 +106,23 @@ class DeviceSelectionWindow(Gtk.Dialog):
         )
 
         self.context = parent.context
+        self.context.hotplug_callback = self.hotplug
+        self.addresses = {}
         self.store = Gtk.ListStore(str, str, object)
         self.tree = Gtk.TreeView(self.store)
         self.make_treeview()
         self.get_content_area().pack_start(self.tree, True, True, 0)
         self.set_default_size(300, 300)
         self.show_all()
+
+    def hotplug(self, event, node):
+        if event == librpc.BusEvent.ATTACHED:
+            self.addresses[node.address] = self.store.append((node.name, node.serial, node))
+            return
+
+        if event == librpc.BusEvent.DETACHED:
+            if node.address in self.addresses:
+                self.store.remove(self.addresses[node.address])
 
     def make_treeview(self):
         column = Gtk.TreeViewColumn("Name")
@@ -110,11 +138,14 @@ class DeviceSelectionWindow(Gtk.Dialog):
         self.tree.append_column(column)
 
         for i in self.context.bus.enumerate():
-            self.store.append((i.name, i.serial, i))
+            self.addresses[i.address] = self.store.append((i.name, i.serial, i))
 
     @property
     def selected(self):
         _, treeiter = self.tree.get_selection().get_selected_rows()
+        if not treeiter:
+            return None
+
         return self.store[treeiter][2]
 
 
@@ -144,8 +175,13 @@ class RPCPane(Gtk.Box):
         line = self.input.get_text()
         buffer = self.log.get_buffer()
         end = buffer.get_end_iter()
-        result = GLib.markup_escape_text(str(self.context.process_command(line)))
-        buffer.insert_markup(end, RESPONSE_TEMPLATE.format(line, result), -1)
+        request, result = self.context.process_command(line)
+        buffer.insert_markup(end, RESPONSE_TEMPLATE.format(
+            GLib.markup_escape_text(str(request)),
+            GLib.markup_escape_text(str(result))),
+            -1
+        )
+
         self.log.scroll_to_iter(buffer.get_end_iter(), 0, False, 0, 0)
         self.input.set_text('')
 
@@ -171,7 +207,9 @@ class LogPane(Gtk.Box):
 
 
 class RecordPane(Gtk.Box):
-    pass
+    def __init__(self, parent):
+        super(RecordPane, self).__init__()
+        self.context = parent.context
 
 
 class MainWindow(Gtk.Window):
