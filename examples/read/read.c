@@ -12,7 +12,7 @@
 #include <errno.h>
 #include <string.h>
 #include <getopt.h>
-#include "../../src/adcusb.h"
+#include <adcusb.h>
 
 static void
 usage(const char *argv0)
