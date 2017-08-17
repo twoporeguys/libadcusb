@@ -159,6 +159,11 @@ void
 adcusb_stop(struct adcusb_device *dev)
 {
 	dev->ad_transfer = false;
+
+	for (int i = 0; i < ADCUSB_NUM_XFERS; i++) {
+		libusb_free_transfer(dev->ad_xfers[i]);
+		g_free(dev->ad_buffers[i]);
+	}
 }
 
 void
