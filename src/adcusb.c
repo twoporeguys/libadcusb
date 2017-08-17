@@ -1,3 +1,10 @@
+/*
+ * Copyright 2017 Two Pore Guys, Inc.
+ * All rights reserved.
+ *
+ * This is proprietary software.
+ */
+
 #include <Block.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -5,25 +12,26 @@
 #include <libusb-1.0/libusb.h>
 #include <adcusb.h>
 
+#define	ADCUSB_PACKET_SIZE	576
+#define	ADCUSB_NUM_XFERS	4
+#define	ADCUSB_NUM_DESCS	64
+#define	ADCUSB_EP_NUM		1
+
 static void adcusb_transfer_cb(struct libusb_transfer *);
 static void *adcusb_libusb_thread(void *);
-
-struct adcusb_packet
-{
-
-};
 
 struct adcusb_device
 {
 	libusb_context *	ad_libusb;
 	libusb_device_handle *	ad_handle;
-	struct libusb_transfer *ad_xfer;
+	struct libusb_transfer *ad_xfers[ADCUSB_NUM_XFERS];
 	GThread *		ad_libusb_thread;
 	bool 			ad_running;
 	bool			ad_transfer;
 	adcusb_callback_t 	ad_callback;
-	struct adcusb_packet *	ad_buffer;
+	struct adcusb_packet *	ad_buffers[ADCUSB_NUM_XFERS];
 	int 			ad_buffer_size;
+	size_t			ad_num_descs;
 };
 
 int
@@ -33,6 +41,8 @@ adcusb_open_by_serial(const char *serial, struct adcusb_device **devp)
 	struct libusb_device **devices;
 	struct libusb_device_descriptor desc;
 	uint8_t strdesc[NAME_MAX];
+
+	dev->ad_num_descs = ADCUSB_NUM_DESCS;
 
 	if (libusb_init(&dev->ad_libusb) != 0) {
 		g_free(dev);
@@ -85,6 +95,8 @@ adcusb_open_by_address(int address, struct adcusb_device **devp)
 		return (-1);
 	}
 
+	dev->ad_num_descs = ADCUSB_NUM_DESCS;
+
 	libusb_get_device_list(dev->ad_libusb, &devices);
 
 	for (; *devices != NULL; devices++) {
@@ -123,19 +135,22 @@ adcusb_start(struct adcusb_device *dev)
 	dev->ad_running = true;
 	dev->ad_libusb_thread = g_thread_new("adcusb", adcusb_libusb_thread, dev);
 	dev->ad_transfer = true;
-	dev->ad_buffer = g_malloc0(100 * 576);
-	dev->ad_xfer = libusb_alloc_transfer(100);
-	dev->ad_buffer_size = 576 * 100;
 
-	libusb_fill_iso_transfer(dev->ad_xfer, dev->ad_handle,
-	    1 | LIBUSB_ENDPOINT_IN,
-	    (uint8_t *)dev->ad_buffer, 576, 100,
-	    adcusb_transfer_cb, dev, 1000);
+	for (int i = 0; i < ADCUSB_NUM_XFERS; i++) {
+		dev->ad_buffers[i] = g_malloc0(dev->ad_num_descs * ADCUSB_PACKET_SIZE);
+		dev->ad_xfers[i] = libusb_alloc_transfer(ADCUSB_PACKET_SIZE);
+		dev->ad_buffer_size = (int)(ADCUSB_PACKET_SIZE * dev->ad_num_descs);
 
-	libusb_set_iso_packet_lengths(dev->ad_xfer, 576);
+		libusb_fill_iso_transfer(dev->ad_xfers[i], dev->ad_handle,
+		    ADCUSB_EP_NUM | LIBUSB_ENDPOINT_IN,
+		    (uint8_t *)dev->ad_buffers[i], ADCUSB_PACKET_SIZE,
+		    (int)dev->ad_num_descs, adcusb_transfer_cb, dev, 1000);
 
-	if (libusb_submit_transfer(dev->ad_xfer) != 0)
-		return (-1);
+		libusb_set_iso_packet_lengths(dev->ad_xfers[i], 576);
+
+		if (libusb_submit_transfer(dev->ad_xfers[i]) != 0)
+			return (-1);
+	}
 
 	return (0);
 }
@@ -150,6 +165,8 @@ void
 adcusb_close(struct adcusb_device *dev)
 {
 
+	libusb_close(dev->ad_handle);
+	libusb_exit(dev->ad_libusb);
 }
 
 static void

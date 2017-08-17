@@ -1,3 +1,10 @@
+/*
+ * Copyright 2017 Two Pore Guys, Inc.
+ * All rights reserved.
+ *
+ * This is proprietary software.
+ */
+
 #ifndef LIBADCUSB_H
 #define LIBADCUSB_H
 
@@ -18,9 +25,9 @@ typedef void (^adcusb_callback_t)(struct adcusb_device *,
     struct adcusb_data_block *);
 
 #define	ADCUSB_CALLBACK(_fn, _arg) 					\
-    ^(struct adcusb_device *_dev, struct adcusb_data_block *_blk) {	\
-        _fn(_arg, _dev, _blk);						\
-    }
+	^(struct adcusb_device *_dev, struct adcusb_data_block *_blk) {	\
+		_fn(_arg, _dev, _blk);					\
+	}
 
 int adcusb_open_by_serial(const char *serial, adcusb_device_t *devp);
 int adcusb_open_by_address(int address, adcusb_device_t *devp);

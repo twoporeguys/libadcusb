@@ -19,7 +19,7 @@ link_directories(${LIBUSB_LIBRARY_DIRS})
 include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
 
-add_library(libadcusb SHARED ${SOURCE_FILES})
+add_library(libadcusb SHARED ${SOURCE_FILES} ${HEADERS})
 set_target_properties(libadcusb PROPERTIES PREFIX "")
 target_link_libraries(libadcusb ${GLIB_LIBRARIES})
 target_link_libraries(libadcusb ${LIBUSB_LIBRARIES})
