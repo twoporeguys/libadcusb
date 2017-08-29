@@ -12,6 +12,10 @@
 #include <libusb-1.0/libusb.h>
 #include <adcusb.h>
 
+#ifndef NAME_MAX
+#define NAME_MAX	255
+#endif
+
 #define	ADCUSB_PACKET_SIZE	576
 #define	ADCUSB_NUM_XFERS	4
 #define	ADCUSB_NUM_DESCS	64

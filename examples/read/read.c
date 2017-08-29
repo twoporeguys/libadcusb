@@ -94,5 +94,11 @@ main(int argc, char *argv[])
 	}
 
 	printf("Started data acquisition\n");
+
+#ifdef _WIN32
+	for (;;)
+		sleep(1);
+#else
 	pause();
+#endif
 }
