@@ -39,7 +39,7 @@ struct adcusb_device
 };
 
 int
-adcusb_open_by_serial(const char *serial, struct adcusb_device **devp)
+adcusb_open_by_serial(const char *serial, dcusb_device_t *devp)
 {
 	struct adcusb_device *dev = g_malloc0(sizeof(*dev));
 	struct libusb_device **devices;
@@ -89,7 +89,7 @@ fail:
 }
 
 int
-adcusb_open_by_address(int address, struct adcusb_device **devp)
+adcusb_open_by_address(int address, adcusb_device_t *devp)
 {
 	struct adcusb_device *dev = g_malloc0(sizeof(*dev));
 	struct libusb_device **devices;
@@ -128,13 +128,18 @@ fail:
 void
 adcusb_set_callback(struct adcusb_device *dev, adcusb_callback_t cb)
 {
+	g_assert_nonnull(dev);
 
-	dev->ad_callback = Block_copy(cb);
+	if (dev->ad_callback != NULL)
+		Block_release(dev->ad_callback);
+
+	dev->ad_callback = cb != NULL ? Block_copy(cb) : NULL;
 }
 
 int
 adcusb_start(struct adcusb_device *dev)
 {
+	g_assert_nonnull(dev);
 
 	dev->ad_running = true;
 	dev->ad_libusb_thread = g_thread_new("adcusb", adcusb_libusb_thread, dev);
@@ -173,9 +178,14 @@ adcusb_stop(struct adcusb_device *dev)
 void
 adcusb_close(struct adcusb_device *dev)
 {
+	g_assert_nonnull(dev);
+
+	if (dev->ad_callback != NULL)
+		Block_release(dev->ad_callback);
 
 	libusb_close(dev->ad_handle);
 	libusb_exit(dev->ad_libusb);
+	g_free(dev);
 }
 
 static void
