@@ -39,7 +39,7 @@ struct adcusb_device
 };
 
 int
-adcusb_open_by_serial(const char *serial, dcusb_device_t *devp)
+adcusb_open_by_serial(const char *serial, adcusb_device_t *devp)
 {
 	struct adcusb_device *dev = g_malloc0(sizeof(*dev));
 	struct libusb_device **devices;

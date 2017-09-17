@@ -37,4 +37,4 @@ int adcusb_start(adcusb_device_t dev);
 void adcusb_stop(adcusb_device_t dev);
 void adcusb_close(adcusb_device_t dev);
 
-#endif
+#endif	/* LIBADCUSB_H */

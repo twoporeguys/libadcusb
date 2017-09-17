@@ -14,6 +14,9 @@ from cpython cimport PyObject, Py_INCREF
 from adcusb cimport *
 
 
+np.import_array()
+
+
 class ADCException(RuntimeError):
     pass
 
@@ -23,7 +26,11 @@ cdef class ADCArray(object):
     cdef uint32_t count
 
     def __array__(self):
-        pass
+        cdef np.npy_intp shape[1]
+
+        shape[0] = <np.npy_intp>self.count
+        ndarray = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, self.samples)
+        return ndarray
 
     def __dealloc__(self):
         pass
@@ -32,13 +39,25 @@ cdef class ADCArray(object):
 cdef class ADCDataBlock(object):
     cdef adcusb_data_block *block
 
+    def __dealloc__(self):
+        pass #free(<void *>self.block)
+
     property seqno:
         def __get__(self):
             return self.block.adb_seqno
 
+    property length:
+        def __get__(self):
+            return self.block.adb_count
+
     property samples:
         def __get__(self):
-            return # XXX self.block.adb_samples[:self.block.adb_count]
+            cdef ADCArray arr
+
+            arr = ADCArray.__new___(ADCArray)
+            arr.samples = self.block.adb_samples
+            arr.count = self.block.adb_count
+            return arr
 
 
 cdef class ADC(object):
