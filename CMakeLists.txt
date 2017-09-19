@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 project(libadcusb)
 
-option(PYTHON_VERSION "Target Python version for py-adcusb (2 or 3)" 3)
+set(PYTHON_VERSION 3)
 option(BUNDLED_BLOCKS_RUNTIME "Use bundled version of BlocksRuntime")
 
 set(CMAKE_C_COMPILER clang)
