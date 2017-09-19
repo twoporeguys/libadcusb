@@ -155,7 +155,7 @@ adcusb_start(struct adcusb_device *dev)
 		    (uint8_t *)dev->ad_buffers[i], ADCUSB_PACKET_SIZE,
 		    (int)dev->ad_num_descs, adcusb_transfer_cb, dev, 1000);
 
-		libusb_set_iso_packet_lengths(dev->ad_xfers[i], 576);
+		libusb_set_iso_packet_lengths(dev->ad_xfers[i], ADCUSB_PACKET_SIZE);
 
 		if (libusb_submit_transfer(dev->ad_xfers[i]) != 0)
 			return (-1);
@@ -198,7 +198,8 @@ adcusb_transfer_cb(struct libusb_transfer *xfer)
 
 	for (i = 0; i < xfer->num_iso_packets; i++) {
 		iso = &xfer->iso_packet_desc[i];
-		block = (struct adcusb_data_block *)&xfer->buffer[576 * i];
+		block = (struct adcusb_data_block *)
+		    &xfer->buffer[ADCUSB_PACKET_SIZE * i];
 		dev->ad_callback(dev, block);
 	}
 
