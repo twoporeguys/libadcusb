@@ -198,6 +198,9 @@ adcusb_transfer_cb(struct libusb_transfer *xfer)
 
 	for (i = 0; i < xfer->num_iso_packets; i++) {
 		iso = &xfer->iso_packet_desc[i];
+		if (iso->actual_length < sizeof(struct adcusb_data_block))
+			continue;
+
 		block = (struct adcusb_data_block *)
 		    &xfer->buffer[ADCUSB_PACKET_SIZE * i];
 		dev->ad_callback(dev, block);
