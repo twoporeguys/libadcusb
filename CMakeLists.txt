@@ -34,6 +34,7 @@ add_library(libadcusb SHARED ${SOURCE_FILES} ${HEADERS})
 set_target_properties(libadcusb PROPERTIES PREFIX "")
 target_link_libraries(libadcusb ${GLIB_LIBRARIES})
 target_link_libraries(libadcusb ${LIBUSB_LIBRARIES})
+install(TARGETS libadcusb DESTINATION lib)
 
 if(NOT APPLE)
     target_link_libraries(libadcusb BlocksRuntime)
