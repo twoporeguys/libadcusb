@@ -4,7 +4,7 @@ case $OSTYPE in
     darwin*)
         echo "I am a Mac.  Brew installing stuff."
         echo "Don't worry about warnings of things already installed."
-        brew install cmake glib libusb python3
+        brew install cmake glib gtk+3 libusb python3
         brew install pygobject3 --with-python3
         pip3 install -r requirements.txt
         ;;
