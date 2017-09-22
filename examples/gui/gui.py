@@ -82,7 +82,8 @@ class Context(object):
     def log_reader(self):
         f = os.fdopen(self.rpipe)
         while True:
-            self.write_log(f.readline())
+            text = f.readline()
+            GLib.idle_add(self.write_log, text)
 
     def pinger(self):
         while True:
