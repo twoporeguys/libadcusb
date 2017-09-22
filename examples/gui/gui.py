@@ -39,7 +39,6 @@ class Context(object):
         self.ping_thread = None
 
     def bus_event(self, event, node):
-        print(event, node)
         if self.hotplug_callback:
             self.hotplug_callback(event, node)
 
@@ -110,10 +109,11 @@ class DeviceSelectionWindow(Gtk.Dialog):
             )
         )
 
+        self.lock = threading.Lock()
         self.context = parent.context
         self.context.hotplug_callback = self.hotplug
         self.addresses = {}
-        self.store = Gtk.ListStore(str, str, object)
+        self.store = Gtk.ListStore(str, str, int, object)
         self.tree = Gtk.TreeView(self.store)
         self.make_treeview()
         self.get_content_area().pack_start(self.tree, True, True, 0)
@@ -121,13 +121,22 @@ class DeviceSelectionWindow(Gtk.Dialog):
         self.show_all()
 
     def hotplug(self, event, node):
-        if event == librpc.BusEvent.ATTACHED:
-            self.addresses[node.address] = self.store.append((node.name, node.serial, node))
-            return
+        with self.lock:
+            if event == librpc.BusEvent.ATTACHED:
+                if node.address in self.addresses:
+                    return
 
-        if event == librpc.BusEvent.DETACHED:
-            if node.address in self.addresses:
-                self.store.remove(self.addresses[node.address])
+                self.addresses[node.address] = self.store.append((
+                    node.name,
+                    node.serial,
+                    node.address,
+                    node
+                ))
+                return
+
+            if event == librpc.BusEvent.DETACHED:
+                if node.address in self.addresses:
+                    self.store.remove(self.addresses[node.address])
 
     def make_treeview(self):
         column = Gtk.TreeViewColumn("Name")
@@ -142,8 +151,15 @@ class DeviceSelectionWindow(Gtk.Dialog):
         column.add_attribute(label, "text", 1)
         self.tree.append_column(column)
 
-        for i in self.context.bus.enumerate():
-            self.addresses[i.address] = self.store.append((i.name, i.serial, i))
+        column = Gtk.TreeViewColumn("Address")
+        label = Gtk.CellRendererText()
+        column.pack_start(label, True)
+        column.add_attribute(label, "text", 2)
+        self.tree.append_column(column)
+
+        with self.lock:
+            for i in self.context.bus.enumerate():
+                self.addresses[i.address] = self.store.append((i.name, i.serial, i.address, i))
 
     @property
     def selected(self):
@@ -151,7 +167,7 @@ class DeviceSelectionWindow(Gtk.Dialog):
         if not treeiter:
             return None
 
-        return self.store[treeiter][2]
+        return self.store[treeiter][-1]
 
 
 class RPCPane(Gtk.Box):
@@ -240,10 +256,15 @@ class MainWindow(Gtk.Window):
 
     def select_device(self):
         dialog = DeviceSelectionWindow(self)
-        resp = dialog.run()
+        try:
+            resp = dialog.run()
+        except KeyboardInterrupt:
+            Gtk.main_quit()
+            return
 
         if resp == Gtk.ResponseType.CANCEL:
             Gtk.main_quit()
+            return
 
         self.context.connect(dialog.selected)
         dialog.destroy()
@@ -256,4 +277,8 @@ if __name__ == '__main__':
     ctx = Context()
     win = MainWindow(ctx)
     win.show_all()
-    Gtk.main()
+
+    try:
+        Gtk.main()
+    except KeyboardInterrupt:
+        Gtk.main_quit()
