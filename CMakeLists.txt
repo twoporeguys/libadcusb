@@ -35,6 +35,7 @@ set_target_properties(libadcusb PROPERTIES PREFIX "")
 target_link_libraries(libadcusb ${GLIB_LIBRARIES})
 target_link_libraries(libadcusb ${LIBUSB_LIBRARIES})
 install(TARGETS libadcusb DESTINATION lib)
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 if(NOT APPLE)
     target_link_libraries(libadcusb BlocksRuntime)
