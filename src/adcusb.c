@@ -7,14 +7,12 @@
 
 #include <Block.h>
 #include <stdint.h>
+#include <string.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <glib.h>
 #include <libusb-1.0/libusb.h>
 #include <adcusb.h>
-
-#ifndef NAME_MAX
-#define NAME_MAX	255
-#endif
 
 #define	ADCUSB_PACKET_SIZE	576
 #define	ADCUSB_NUM_XFERS	4
@@ -38,13 +36,62 @@ struct adcusb_device
 	size_t			ad_num_descs;
 };
 
+int adcusb_get_device_serial_numbers(char serials[][20], int serial_count)
+{
+	struct libusb_device **devices;
+	struct libusb_device_descriptor desc;
+    struct libusb_device_handle *usb_handle;
+    libusb_context *libusb_ctx;
+
+	char serial[ADBUSB_SERIAL_MAX_LEN];
+
+    int serial_found = 0;
+
+	if (libusb_init(&libusb_ctx) != 0)
+		return 0;
+
+	libusb_get_device_list(libusb_ctx, &devices);
+
+	for (; (*devices != NULL) && (serial_found < serial_count); devices++) {
+		if (libusb_get_device_descriptor(*devices, &desc) != 0)
+			continue;
+
+		if (libusb_open(*devices, &usb_handle) != 0)
+            continue;
+
+        // scratch non-tpg's devices
+        libusb_get_string_descriptor_ascii(usb_handle, desc.iManufacturer, (uint8_t *)serial, sizeof(serial));
+        if (strcmp("TwoPoreGuys Inc.", serial) != 0) {
+            libusb_close(usb_handle);
+            continue;
+        }
+        libusb_get_string_descriptor_ascii(usb_handle, desc.iSerialNumber, (uint8_t *)serial, sizeof(serial));
+        libusb_close(usb_handle);
+
+        // cull duplicates
+        int i, found = 0;
+        for (i = 0; i < serial_found; i++) {
+            if (strcmp(serials[i], serial) == 0) {
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found)
+            strncpy(serials[serial_found++], (const char *)serial, sizeof(serial));
+    }
+
+	libusb_exit(libusb_ctx);
+    return serial_found;
+}
+
 int
 adcusb_open_by_serial(const char *serial, adcusb_device_t *devp)
 {
 	struct adcusb_device *dev = g_malloc0(sizeof(*dev));
 	struct libusb_device **devices;
 	struct libusb_device_descriptor desc;
-	uint8_t strdesc[NAME_MAX];
+	uint8_t strdesc[ADBUSB_SERIAL_MAX_LEN];
 
 	dev->ad_num_descs = ADCUSB_NUM_DESCS;
 

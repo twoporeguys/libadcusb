@@ -13,15 +13,17 @@
 #include <string.h>
 #include <getopt.h>
 #include <adcusb.h>
+#include <rpc/client.h>
 
 static void
 usage(const char *argv0)
 {
 
-	fprintf(stderr, "Usage: %s [-s serial|-d address] <output>\n", argv0);
+	fprintf(stderr, "Usage: %s [-l | -s serial | -d address] <output>\n", argv0);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "-s serial -- opens adcusb device by serial number\n");
 	fprintf(stderr, "-d address -- opens adcusb device by USB address\n");
+	fprintf(stderr, "-l address -- list adcusb device by serial number\n");
 }
 
 static void
@@ -42,8 +44,10 @@ main(int argc, char *argv[])
 	char *address = NULL;
 	uint32_t addr_int;
 	adcusb_device_t dev;
+    int list = 0;
+    int fds[2]; /* fds[0] is read end, fds[1] is write end */
 
-	while ((opt = getopt(argc, argv, "hs:d:")) != -1) {
+	while ((opt = getopt(argc, argv, "hls:d:")) != -1) {
 		switch (opt) {
 		case 'h':
 			usage(argv[0]);
@@ -56,13 +60,29 @@ main(int argc, char *argv[])
 		case 'd':
 			address = strdup(optarg);
 			break;
+
+		case 'l':
+			list = 1;
+			break;
 		}
 	}
 
-	if (address == NULL && serial == NULL) {
-		fprintf(stderr, "Please specify -s or -d\n");
+	if (list == 0 && address == NULL && serial == NULL) {
+		fprintf(stderr, "Please specify -h -l -s or -d\n");
 		return (1);
 	}
+
+    if (list == 1) {
+        #define SERIAL_COUNT  (20)
+        char serials[ADBUSB_SERIAL_MAX_LEN][SERIAL_COUNT];
+        int i, count = adcusb_get_device_serial_numbers(serials, SERIAL_COUNT);
+        printf("%d devices found:\n", count);
+        for (i = 0; i < count; i++)
+        {
+            printf("%s\n", serials[i]);
+        }
+        return (0);
+    }
 
 	if (serial != NULL) {
 		if (adcusb_open_by_serial(serial, &dev) != 0) {
@@ -85,6 +105,14 @@ main(int argc, char *argv[])
 		printf("Opened device <address:%u>\n", addr_int);
 	}
 
+    pipe(fds);
+    rpc_client_t client = rpc_client_create("usb://MOMtest", rpc_fd_create(fds[1]));
+    rpc_connection_t conn = rpc_client_get_connection(client);
+    if (conn) {
+        printf("Calling fread \"start\"\n");
+        rpc_connection_call_sync(conn, "fread", "start", NULL);
+    }
+
 	adcusb_set_callback(dev, ADCUSB_CALLBACK(callback, NULL));
 
 	if (adcusb_start(dev) != 0) {
@@ -101,4 +129,5 @@ main(int argc, char *argv[])
 #else
 	pause();
 #endif
+    return (0);
 }
