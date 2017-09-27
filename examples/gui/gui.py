@@ -48,7 +48,7 @@ class Context(object):
     def connect(self, node):
         self.device = node
         self.connection = librpc.Client()
-        self.connection.connect('usb://{0}'.format(node.name), librpc.Object(self.wpipe, librpc.ObjectType.FD))
+        self.connection.connect('usb://{0}'.format(node.serial), librpc.Object(self.wpipe, librpc.ObjectType.FD))
         self.connection.error_handler = self.connection_error
         self.reader_thread = threading.Thread(target=self.log_reader, daemon=True)
         self.reader_thread.start()
