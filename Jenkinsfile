@@ -16,7 +16,7 @@ pipeline {
             steps {
                 sh "rm -rf ${DOCS_PATH}"
                 sh "mkdir -p ${DOCS_PATH}"
-                sh "cp -a builds/docs/* ${DOCS_PATH}/"
+                sh "cp -a build/docs/* ${DOCS_PATH}/"
             }
         }
     }
