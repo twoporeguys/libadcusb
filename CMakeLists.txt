@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.2)
 project(libadcusb)
 
-set(PYTHON_VERSION 3)
 option(BUNDLED_BLOCKS_RUNTIME "Use bundled version of BlocksRuntime")
+option(BUILD_DOC "Build documentation")
 
+set(PYTHON_VERSION 3)
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_C_STANDARD 99)
@@ -39,6 +40,18 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
 if(NOT APPLE)
     target_link_libraries(libadcusb BlocksRuntime)
+endif()
+
+if(BUILD_DOC)
+    find_package(Doxygen)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doxygen)
+    configure_file(${CMAKE_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+    add_custom_target(doc ALL
+            ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+            COMMAND
+            env BUILD_DIR=${CMAKE_CURRENT_BINARY_DIR} sphinx-build
+            ${CMAKE_SOURCE_DIR}/docs/source ${CMAKE_CURRENT_BINARY_DIR}/docs
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doxygen)
 endif()
 
 add_subdirectory(python)
