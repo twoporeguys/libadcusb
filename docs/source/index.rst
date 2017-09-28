@@ -10,11 +10,11 @@ Welcome to libadcusb's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   guide
    api
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
