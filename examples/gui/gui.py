@@ -92,7 +92,7 @@ class Context(object):
                 continue
 
             try:
-                self.bus.ping(node.name)
+                self.bus.ping(node.serial)
                 self.set_status('Connected to <b>{0}</b>'.format(node.name))
             except:
                 self.set_status('Cannot connect to <b>{0}</b>'.format(node.name))
