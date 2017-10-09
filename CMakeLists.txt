@@ -4,7 +4,7 @@ project(libadcusb)
 option(BUNDLED_BLOCKS_RUNTIME "Use bundled version of BlocksRuntime")
 option(BUILD_DOC "Build documentation")
 
-set(PYTHON_VERSION 3)
+set(PYTHON_VERSION python3)
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_C_STANDARD 99)
