@@ -29,7 +29,7 @@ cdef class ADCArray(object):
         cdef np.npy_intp shape[1]
 
         shape[0] = <np.npy_intp>self.count
-        ndarray = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT64, self.samples)
+        ndarray = np.PyArray_SimpleNewFromData(1, shape, np.NPY_UINT32, self.samples)
         return ndarray
 
     def __dealloc__(self):
@@ -54,7 +54,7 @@ cdef class ADCDataBlock(object):
         def __get__(self):
             cdef ADCArray arr
 
-            arr = ADCArray.__new___(ADCArray)
+            arr = ADCArray.__new__(ADCArray)
             arr.samples = self.block.adb_samples
             arr.count = self.block.adb_count
             return arr
@@ -68,6 +68,8 @@ cdef class ADC(object):
         cdef const char *c_serial
         cdef int c_address
         cdef int ret
+
+        self.dev = <adcusb_device_t>NULL
 
         if not address and not serial:
             raise ADCException('Address or serial must be provided')
@@ -91,6 +93,7 @@ cdef class ADC(object):
     def __dealloc__(self):
         if self.dev != <adcusb_device_t>NULL:
             with nogil:
+                adcusb_stop(self.dev)
                 adcusb_close(self.dev)
 
     def start(self):
