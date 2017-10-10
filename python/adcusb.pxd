@@ -18,7 +18,7 @@ cdef extern from "adcusb.h" nogil:
         uint32_t adb_count
         uint32_t adb_samples[0]
 
-    void *ADCUSB_CALLBACK(adcusb_callback_t cb);
+    void *ADCUSB_CALLBACK(adcusb_callback_t cb, void *arg);
 
     int adcusb_open_by_serial(const char *serial, adcusb_device_t *devp)
     int adcusb_open_by_address(int address, adcusb_device_t *devp)

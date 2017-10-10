@@ -86,6 +86,8 @@ cdef class ADC(object):
         if ret != 0:
             raise ADCException(os.strerror(errno))
 
+        adcusb_set_callback(self.dev, ADCUSB_CALLBACK(self.c_callback, <void *>self))
+
     def __dealloc__(self):
         if self.dev != <adcusb_device_t>NULL:
             with nogil:
