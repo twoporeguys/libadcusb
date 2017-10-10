@@ -8,8 +8,6 @@
 #ifndef LIBADCUSB_H
 #define LIBADCUSB_H
 
-#include <libusb-1.0/libusb.h>
-
 /**
  * @file adcusb.h
  *

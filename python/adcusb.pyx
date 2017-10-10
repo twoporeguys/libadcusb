@@ -72,13 +72,13 @@ cdef class ADC(object):
         if not address and not serial:
             raise ADCException('Address or serial must be provided')
 
-        if address:
+        if serial:
             u_serial = serial.encode('utf-8')
             c_serial = u_serial
             with nogil:
                 ret = adcusb_open_by_serial(c_serial, &self.dev)
 
-        elif serial:
+        elif address:
             c_address = address
             with nogil:
                 ret = adcusb_open_by_address(c_address, &self.dev)
@@ -87,8 +87,9 @@ cdef class ADC(object):
             raise ADCException(os.strerror(errno))
 
     def __dealloc__(self):
-        with nogil:
-            adcusb_close(self.dev)
+        if self.dev != <adcusb_device_t>NULL:
+            with nogil:
+                adcusb_close(self.dev)
 
     def start(self):
         with nogil:

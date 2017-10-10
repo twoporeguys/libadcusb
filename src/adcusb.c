@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <glib.h>
-#include <libusb-1.0/libusb.h>
+#include <libusb.h>
 #include <adcusb.h>
 
 #ifndef NAME_MAX
