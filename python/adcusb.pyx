@@ -8,6 +8,8 @@
 import os
 import numpy as np
 cimport numpy as np
+from libc.stdlib cimport malloc, free
+from libc.string cimport memcpy
 from libc.stdint cimport *
 from libc.errno cimport errno
 from cpython cimport PyObject, Py_INCREF
@@ -21,26 +23,11 @@ class ADCException(RuntimeError):
     pass
 
 
-cdef class ADCArray(object):
-    cdef uint32_t *samples
-    cdef uint32_t count
-
-    def __array__(self):
-        cdef np.npy_intp shape[1]
-
-        shape[0] = <np.npy_intp>self.count
-        ndarray = np.PyArray_SimpleNewFromData(1, shape, np.NPY_UINT32, self.samples)
-        return ndarray
-
-    def __dealloc__(self):
-        pass
-
-
 cdef class ADCDataBlock(object):
     cdef adcusb_data_block *block
 
     def __dealloc__(self):
-        pass #free(<void *>self.block)
+        free(<void *>self.block)
 
     property seqno:
         def __get__(self):
@@ -52,12 +39,11 @@ cdef class ADCDataBlock(object):
 
     property samples:
         def __get__(self):
-            cdef ADCArray arr
+            cdef np.npy_intp shape[1]
 
-            arr = ADCArray.__new__(ADCArray)
-            arr.samples = self.block.adb_samples
-            arr.count = self.block.adb_count
-            return arr
+            shape[0] = <np.npy_intp>self.block.adb_count
+            ndarray = np.PyArray_SimpleNewFromData(1, shape, np.NPY_UINT32, self.block.adb_samples)
+            return ndarray
 
 
 cdef class ADC(object):
@@ -107,9 +93,16 @@ cdef class ADC(object):
     @staticmethod
     cdef void c_callback(void *arg, adcusb_device_t dev, adcusb_data_block *blk) with gil:
         cdef object self = <object>arg
+        cdef adcusb_data_block *copied
         cdef ADCDataBlock block
 
+        block_size = sizeof(adcusb_data_block) + blk.adb_count * sizeof(uint32_t)
+
         if callable(self.callback):
+            with nogil:
+                copied = <adcusb_data_block *>malloc(block_size)
+                memcpy(copied, blk, block_size)
+
             block = ADCDataBlock.__new__(ADCDataBlock)
-            block.block = blk
+            block.block = copied
             self.callback(block)
