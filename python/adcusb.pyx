@@ -25,6 +25,7 @@ class ADCException(RuntimeError):
 
 cdef class ADCDataBlock(object):
     cdef adcusb_data_block *block
+    cdef object ndarray
 
     def __dealloc__(self):
         free(<void *>self.block)
@@ -41,9 +42,12 @@ cdef class ADCDataBlock(object):
         def __get__(self):
             cdef np.npy_intp shape[1]
 
+            if self.ndarray != <object>NULL:
+                return self.ndarray
+
             shape[0] = <np.npy_intp>self.block.adb_count
-            ndarray = np.PyArray_SimpleNewFromData(1, shape, np.NPY_UINT32, self.block.adb_samples)
-            return ndarray
+            self.ndarray = np.PyArray_SimpleNewFromData(1, shape, np.NPY_UINT32, self.block.adb_samples)
+            return self.ndarray
 
 
 cdef class ADC(object):
