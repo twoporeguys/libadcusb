@@ -108,5 +108,6 @@ cdef class ADC(object):
                 memcpy(copied, blk, block_size)
 
             block = ADCDataBlock.__new__(ADCDataBlock)
+            block.ndarray = <object>NULL
             block.block = copied
             self.callback(block)
