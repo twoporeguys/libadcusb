@@ -30,6 +30,11 @@ cdef class ADCDataBlock(object):
     def __dealloc__(self):
         free(<void *>self.block)
 
+    cdef init(self):
+        cdef np.npy_intp shape[1]
+        shape[0] = <np.npy_intp>self.block.adb_count
+        self.ndarray = np.PyArray_SimpleNewFromData(1, shape, np.NPY_UINT32, self.block.adb_samples)
+
     property seqno:
         def __get__(self):
             return self.block.adb_seqno
@@ -40,15 +45,7 @@ cdef class ADCDataBlock(object):
 
     property samples:
         def __get__(self):
-            cdef np.npy_intp shape[1]
-
-            if self.ndarray != <object>NULL:
-                return self.ndarray
-
-            shape[0] = <np.npy_intp>self.block.adb_count
-            self.ndarray = np.PyArray_SimpleNewFromData(1, shape, np.NPY_UINT32, self.block.adb_samples)
             return self.ndarray
-
 
 cdef class ADC(object):
     cdef adcusb_device_t dev
@@ -108,6 +105,6 @@ cdef class ADC(object):
                 memcpy(copied, blk, block_size)
 
             block = ADCDataBlock.__new__(ADCDataBlock)
-            block.ndarray = <object>NULL
             block.block = copied
+            block.init()
             self.callback(block)
