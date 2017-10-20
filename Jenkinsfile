@@ -1,4 +1,4 @@
-DOCS_PATH = '/var/www/docs/libadcusb'
+DOCS_PATH = '/mnt/builds/docs/libadcusb'
 
 pipeline {
     agent { label 'master' }
