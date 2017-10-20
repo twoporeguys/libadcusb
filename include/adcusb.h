@@ -27,7 +27,7 @@ struct adcusb_data_block
 	uint64_t	adb_seqno;	/**< Sequence number */
 	uint32_t	adb_overrun;	/**< Overrun counter */
 	uint32_t 	adb_count;	/**< Number of samples in the block */
-	uint32_t 	adb_samples[];	/**< Variable array of samples */
+	int32_t 	adb_samples[];	/**< Variable array of samples */
 
 };
 
