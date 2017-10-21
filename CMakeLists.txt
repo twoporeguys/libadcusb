@@ -3,6 +3,7 @@ project(libadcusb)
 
 option(BUNDLED_BLOCKS_RUNTIME "Use bundled version of BlocksRuntime")
 option(BUILD_DOC "Build documentation")
+option(BUILD_PYTHON "Build and install Python extension" ON)
 
 set(PYTHON_VERSION python3 CACHE STRING "Target Python version for py-adcusb")
 set(CMAKE_C_COMPILER clang)
@@ -54,7 +55,10 @@ if(BUILD_DOC)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doxygen)
 endif()
 
-add_subdirectory(python)
+if(BUILD_PYTHON)
+    add_subdirectory(python)
+endif()
+
 add_subdirectory(examples/read)
 
 # uninstall target

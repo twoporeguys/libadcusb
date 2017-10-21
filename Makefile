@@ -1,12 +1,15 @@
 .PHONY: all
 
+BUILD_PYTHON := ON
 PYTHON_VERSION := "python3"
 INSTALL_PREFIX := "/usr/local"
 
 all:
 	mkdir -p build && \
 	cd build && \
-	cmake .. -DPYTHON_VERSION=${PYTHON_VERSION} -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} && \
+	cmake .. -DPYTHON_VERSION=${PYTHON_VERSION} \
+	-DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
+	-DBUILD_PYTHON=${BUILD_PYTHON} && \
 	make
 
 .PHONY: clean
