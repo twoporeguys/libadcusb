@@ -93,7 +93,7 @@ adcusb_open_by_serial(const char *serial, adcusb_device_t *devp)
 			continue;
 		}
 
-		if (libusb_claim_interface(dev->ad_handle, 0) != 0) {
+		if (libusb_claim_interface(dev->ad_handle, 1) != 0) {
 			libusb_close(dev->ad_handle);
 			goto fail;
 		}
