@@ -30,7 +30,7 @@ import adcusb
 
 
 def cb(block):
-    print('Block: seqno={0}, length={1}'.format(block.seqno, block.length))
+    print('Block: seqno={0}, overrun={1}, length={2}'.format(block.seqno, block.overrun, block.length))
     print(block.samples.__array__())
 
 

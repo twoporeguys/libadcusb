@@ -62,6 +62,10 @@ cdef class ADCDataBlock(object):
         def __get__(self):
             return self.block.adb_count
 
+    property overrun:
+        def __get__(self):
+            return self.block.adb_overrun
+
     property samples:
         def __get__(self):
             return self.ndarray
