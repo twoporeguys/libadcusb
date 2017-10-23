@@ -34,6 +34,7 @@ cdef extern from "adcusb.h" nogil:
 
     cdef struct adcusb_data_block:
         uint64_t adb_seqno
+        uint32_t adb_overrun
         uint32_t adb_count
         uint32_t adb_samples[0]
 
