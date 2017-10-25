@@ -36,7 +36,7 @@ cdef extern from "adcusb.h" nogil:
         uint64_t adb_seqno
         uint32_t adb_overrun
         uint32_t adb_count
-        uint32_t adb_samples[0]
+        int32_t adb_samples[0]
 
     void *ADCUSB_CALLBACK(adcusb_callback_t cb, void *arg);
 
