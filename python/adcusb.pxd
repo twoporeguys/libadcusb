@@ -25,8 +25,12 @@
 #
 
 from libc.stdint cimport *
+cimport numpy as np
 
 ctypedef void (*adcusb_callback_t)(void *arg, adcusb_device_t, adcusb_data_block *);
+
+cdef extern from "numpy/arrayobject.h":
+    int PyArray_SetBaseObject(np.ndarray arr, object base)
 
 cdef extern from "adcusb.h" nogil:
     ctypedef struct adcusb_device_t:
