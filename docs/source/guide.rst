@@ -9,7 +9,6 @@ directly inside source tree.
 
 Build options
 ^^^^^^^^^^^^^
-
 +------------------------+---------+---------------------------------------+
 | Option name            | Default | Description                           |
 +========================+=========+=======================================+
@@ -25,7 +24,7 @@ What libadcusb is and what it's not
 -----------------------------------
 `libadcusb <https://github.com/twoporeguys/libadcusb>`_ is a library designed
 for reading ADC acquisition data over the isochronous data endpoint defined
-in `<mom-firmware <https://github.com/twoporeguys/mom-firmware>`_. It's not
+in `mom-firmware <https://github.com/twoporeguys/mom-firmware>`_. It's not
 meant to provide device enumeration, ability to send any requests to the
 device or handle hot-plug events. You need
 `librpc <https://github.com/twoporeguys/librpc>`_ to handle that stuff.
