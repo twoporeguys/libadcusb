@@ -200,11 +200,12 @@ adcusb_close(struct adcusb_device *dev)
 {
 	g_assert_nonnull(dev);
 
+	libusb_close(dev->ad_handle);
+	libusb_exit(dev->ad_libusb);
+
 	if (dev->ad_callback != NULL)
 		Block_release(dev->ad_callback);
 
-	libusb_close(dev->ad_handle);
-	libusb_exit(dev->ad_libusb);
 	g_free(dev);
 }
 
