@@ -189,10 +189,8 @@ adcusb_stop(struct adcusb_device *dev)
 {
 	dev->ad_transfer = false;
 
-	for (int i = 0; i < ADCUSB_NUM_XFERS; i++) {
-		libusb_free_transfer(dev->ad_xfers[i]);
-		g_free(dev->ad_buffers[i]);
-	}
+	for (int i = 0; i < ADCUSB_NUM_XFERS; i++)
+		libusb_cancel_transfer(dev->ad_xfers[i]);
 }
 
 void
@@ -221,6 +219,16 @@ adcusb_transfer_cb(struct libusb_transfer *xfer)
 	struct adcusb_data_block *block;
 	struct libusb_iso_packet_descriptor *iso;
 	int i;
+
+	if (xfer->status == LIBUSB_TRANSFER_CANCELLED) {
+		for (i = 0; i < ADCUSB_NUM_XFERS; i++) {
+			if (dev->ad_xfers[i] == xfer) {
+				libusb_free_transfer(dev->ad_xfers[i]);
+				g_free(dev->ad_buffers[i]);
+				return;
+			}
+		}
+	}
 
 	for (i = 0; i < xfer->num_iso_packets; i++) {
 		iso = &xfer->iso_packet_desc[i];
