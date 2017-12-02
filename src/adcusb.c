@@ -199,6 +199,11 @@ void
 adcusb_close(struct adcusb_device *dev)
 {
 	g_assert_nonnull(dev);
+	g_assert_nonnull(dev->ad_handle);
+	g_assert_nonnull(dev->ad_libusb);
+
+	dev->ad_running = false;
+	g_thread_join(dev->ad_libusb_thread);
 
 	libusb_close(dev->ad_handle);
 	libusb_exit(dev->ad_libusb);
@@ -234,9 +239,11 @@ static void *
 adcusb_libusb_thread(void *arg)
 {
 	struct adcusb_device *dev = arg;
+	struct timeval tv = {0 ,0};
 
 	while (dev->ad_running)
-		libusb_handle_events(dev->ad_libusb);
+		libusb_handle_events_timeout_completed(dev->ad_libusb, &tv,
+		    NULL);
 
 	return (NULL);
 }
