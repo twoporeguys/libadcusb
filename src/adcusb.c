@@ -43,6 +43,7 @@
 
 static void adcusb_transfer_cb(struct libusb_transfer *);
 static void *adcusb_libusb_thread(void *);
+static inline int adcusb_open(adcusb_device_t *, const char *, int);
 
 struct adcusb_device
 {
@@ -55,18 +56,21 @@ struct adcusb_device
 	adcusb_callback_t 	ad_callback;
 	struct adcusb_packet *	ad_buffers[ADCUSB_NUM_XFERS];
 	int 			ad_buffer_size;
+    	int 			ad_active_xfers_cnt;
 	size_t			ad_num_descs;
+	GMutex			ad_mtx;
+	GCond			ad_cv;
 };
 
-int
-adcusb_open_by_serial(const char *serial, adcusb_device_t *devp)
-{
+static inline int adcusb_open(adcusb_device_t *devp, const char *serial, int address) {
 	struct adcusb_device *dev = g_malloc0(sizeof(*dev));
 	struct libusb_device **devices;
 	struct libusb_device_descriptor desc;
 	uint8_t strdesc[NAME_MAX];
 
 	dev->ad_num_descs = ADCUSB_NUM_DESCS;
+	dev->ad_active_xfers_cnt = ADCUSB_NUM_XFERS;
+	dev->ad_running = true;
 
 	if (libusb_init(&dev->ad_libusb) != 0) {
 		g_free(dev);
@@ -75,74 +79,61 @@ adcusb_open_by_serial(const char *serial, adcusb_device_t *devp)
 
 	libusb_get_device_list(dev->ad_libusb, &devices);
 
+	g_mutex_init(&dev->ad_mtx);
+	g_cond_init(&dev->ad_cv);
+
 	for (; *devices != NULL; devices++) {
-		if (libusb_get_device_descriptor(*devices, &desc) != 0)
-			continue;
 
-		if (libusb_open(*devices, &dev->ad_handle) != 0)
-			goto fail;
+		if (serial == NULL) {
+			if (libusb_get_device_address(*devices) != address)
+				continue;
 
-		if (libusb_get_string_descriptor_ascii(dev->ad_handle,
-		    desc.iSerialNumber, strdesc, sizeof(strdesc)) < 0) {
-			libusb_close(dev->ad_handle);
-			continue;
-		}
+			if (libusb_open(*devices, &dev->ad_handle) != 0)
+				goto fail;
 
-		if (g_strcmp0((char *)strdesc, serial) != 0) {
-			libusb_close(dev->ad_handle);
-			continue;
-		}
+		} else {
+			if (libusb_get_device_descriptor(*devices, &desc) != 0)
+				continue;
 
-		if (libusb_claim_interface(dev->ad_handle, 1) != 0) {
-			libusb_close(dev->ad_handle);
-			goto fail;
+			if (libusb_open(*devices, &dev->ad_handle) != 0)
+				goto fail;
+
+			if (libusb_get_string_descriptor_ascii(dev->ad_handle,
+			    desc.iSerialNumber, strdesc, sizeof(strdesc)) < 0) {
+				libusb_close(dev->ad_handle);
+				continue;
+			}
+
+			if (g_strcmp0((char *) strdesc, serial) != 0) {
+				libusb_close(dev->ad_handle);
+				continue;
+			}
 		}
 
 		*devp = dev;
+		dev->ad_libusb_thread = g_thread_new("adcusb",
+		    adcusb_libusb_thread, dev);
 		return (0);
 	}
 
 fail:
 	libusb_exit(dev->ad_libusb);
+	g_cond_clear(&dev->ad_cv);
+	g_mutex_clear(&dev->ad_mtx);
 	g_free(dev);
 	return (-1);
 }
 
 int
+adcusb_open_by_serial(const char *serial, adcusb_device_t *devp)
+{
+	return adcusb_open(devp, serial, 0);
+}
+
+int
 adcusb_open_by_address(int address, adcusb_device_t *devp)
 {
-	struct adcusb_device *dev = g_malloc0(sizeof(*dev));
-	struct libusb_device **devices;
-
-	if (libusb_init(&dev->ad_libusb) != 0) {
-		g_free(dev);
-		return (-1);
-	}
-
-	dev->ad_num_descs = ADCUSB_NUM_DESCS;
-
-	libusb_get_device_list(dev->ad_libusb, &devices);
-
-	for (; *devices != NULL; devices++) {
-		if (libusb_get_device_address(*devices) != address)
-			continue;
-
-		if (libusb_open(*devices, &dev->ad_handle) != 0)
-			goto fail;
-
-		if (libusb_claim_interface(dev->ad_handle, 0) != 0) {
-			libusb_close(dev->ad_handle);
-			goto fail;
-		}
-
-		*devp = dev;
-		return (0);
-	}
-
-fail:
-	libusb_exit(dev->ad_libusb);
-	g_free(dev);
-	return (-1);
+	return adcusb_open(devp, NULL, address);
 }
 
 void
@@ -159,10 +150,19 @@ adcusb_set_callback(struct adcusb_device *dev, adcusb_callback_t cb)
 int
 adcusb_start(struct adcusb_device *dev)
 {
+	g_mutex_lock(&dev->ad_mtx);
+
 	g_assert_nonnull(dev);
 
-	dev->ad_running = true;
-	dev->ad_libusb_thread = g_thread_new("adcusb", adcusb_libusb_thread, dev);
+	if (dev->ad_transfer)
+		goto done;
+
+	if (!dev->ad_running)
+		goto fail;
+
+	if (libusb_claim_interface(dev->ad_handle, 1) != 0)
+		goto fail;
+
 	dev->ad_transfer = true;
 
 	for (int i = 0; i < ADCUSB_NUM_XFERS; i++) {
@@ -178,19 +178,34 @@ adcusb_start(struct adcusb_device *dev)
 		libusb_set_iso_packet_lengths(dev->ad_xfers[i], ADCUSB_PACKET_SIZE);
 
 		if (libusb_submit_transfer(dev->ad_xfers[i]) != 0)
-			return (-1);
+			goto fail;
 	}
 
+done:	g_mutex_unlock(&dev->ad_mtx);
 	return (0);
+fail:	g_mutex_unlock(&dev->ad_mtx);
+	return (-1);
 }
 
 void
 adcusb_stop(struct adcusb_device *dev)
 {
+	g_mutex_lock(&dev->ad_mtx);
+
+	if (!dev->ad_transfer)
+		goto done;
+
 	dev->ad_transfer = false;
 
-	for (int i = 0; i < ADCUSB_NUM_XFERS; i++)
-		libusb_cancel_transfer(dev->ad_xfers[i]);
+	while (dev->ad_active_xfers_cnt > 0)
+		g_cond_wait(&dev->ad_cv, &dev->ad_mtx);
+
+	for (int i = 0; i < ADCUSB_NUM_XFERS; i++) {
+		libusb_free_transfer(dev->ad_xfers[i]);
+		g_free(dev->ad_buffers[i]);
+	}
+
+done:	g_mutex_unlock(&dev->ad_mtx);
 }
 
 void
@@ -199,15 +214,24 @@ adcusb_close(struct adcusb_device *dev)
 	g_assert_nonnull(dev);
 	g_assert_nonnull(dev->ad_handle);
 	g_assert_nonnull(dev->ad_libusb);
-
 	dev->ad_running = false;
-	g_thread_join(dev->ad_libusb_thread);
 
+	if (dev->ad_transfer == true)
+		adcusb_stop(dev);
+
+	g_mutex_lock(&dev->ad_mtx);
+
+	g_thread_join(dev->ad_libusb_thread);
+	libusb_release_interface(dev->ad_handle, 1);
 	libusb_close(dev->ad_handle);
 	libusb_exit(dev->ad_libusb);
 
 	if (dev->ad_callback != NULL)
 		Block_release(dev->ad_callback);
+
+	g_mutex_unlock(&dev->ad_mtx);
+	g_cond_clear(&dev->ad_cv);
+	g_mutex_clear(&dev->ad_mtx);
 
 	g_free(dev);
 }
@@ -220,27 +244,31 @@ adcusb_transfer_cb(struct libusb_transfer *xfer)
 	struct libusb_iso_packet_descriptor *iso;
 	int i;
 
-	if (xfer->status == LIBUSB_TRANSFER_CANCELLED) {
-		for (i = 0; i < ADCUSB_NUM_XFERS; i++) {
-			if (dev->ad_xfers[i] == xfer) {
-				libusb_free_transfer(dev->ad_xfers[i]);
-				g_free(dev->ad_buffers[i]);
-				return;
-			}
+	g_mutex_lock(&dev->ad_mtx);
+
+	if (xfer->status == LIBUSB_TRANSFER_COMPLETED) {
+		for (i = 0; i < xfer->num_iso_packets; i++) {
+			iso = &xfer->iso_packet_desc[i];
+			if (iso->actual_length < sizeof(struct adcusb_data_block))
+				continue;
+
+			block = (struct adcusb_data_block *)
+				&xfer->buffer[ADCUSB_PACKET_SIZE * i];
+			dev->ad_callback(dev, block);
 		}
-	}
 
-	for (i = 0; i < xfer->num_iso_packets; i++) {
-		iso = &xfer->iso_packet_desc[i];
-		if (iso->actual_length < sizeof(struct adcusb_data_block))
-			continue;
+		if (dev->ad_transfer)
+			libusb_submit_transfer(xfer);
+		else
+			dev->ad_active_xfers_cnt--;
+	} else
+		dev->ad_active_xfers_cnt--;
 
-		block = (struct adcusb_data_block *)
-		    &xfer->buffer[ADCUSB_PACKET_SIZE * i];
-		dev->ad_callback(dev, block);
-	}
+	if (dev->ad_active_xfers_cnt == 0)
+		dev->ad_transfer = false;
 
-	libusb_submit_transfer(xfer);
+	g_cond_signal(&dev->ad_cv);
+	g_mutex_unlock(&dev->ad_mtx);
 }
 
 static void *

@@ -105,7 +105,6 @@ cdef class ADC(object):
     def __dealloc__(self):
         if self.dev != <adcusb_device_t>NULL:
             with nogil:
-                adcusb_stop(self.dev)
                 adcusb_close(self.dev)
 
     def start(self):
