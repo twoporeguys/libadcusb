@@ -204,11 +204,6 @@ adcusb_stop(struct adcusb_device *dev)
 	while (dev->ad_active_xfers_cnt > 0)
 		g_cond_wait(&dev->ad_cv, &dev->ad_mtx);
 
-	for (int i = 0; i < ADCUSB_NUM_XFERS; i++) {
-		libusb_free_transfer(dev->ad_xfers[i]);
-		g_free(dev->ad_buffers[i]);
-	}
-
 done:
 	g_mutex_unlock(&dev->ad_mtx);
 }
@@ -248,11 +243,9 @@ adcusb_transfer_cb(struct libusb_transfer *xfer)
 	struct adcusb_data_block *block;
 	struct libusb_iso_packet_descriptor *iso;
 	int i;
-	int ret;
-
 	g_mutex_lock(&dev->ad_mtx);
 
-	if (xfer->status == LIBUSB_TRANSFER_NO_DEVICE)
+	if (xfer->status != LIBUSB_TRANSFER_COMPLETED)
 		goto unplug;
 
 	for (i = 0; i < xfer->num_iso_packets; i++) {
@@ -266,7 +259,7 @@ adcusb_transfer_cb(struct libusb_transfer *xfer)
 	}
 
 	if (dev->ad_running) {
-		if (libusb_submit_transfer(xfer) == LIBUSB_ERROR_NO_DEVICE)
+		if (libusb_submit_transfer(xfer) != 0)
 			goto unplug;
 	} else {
 		dev->ad_active_xfers_cnt--;
@@ -277,9 +270,10 @@ adcusb_transfer_cb(struct libusb_transfer *xfer)
 	return;
 
 unplug:
-	dev->ad_running = false;
 	dev->ad_active_xfers_cnt--;
 	dev->ad_callback(dev, NULL);
+	g_free(xfer->buffer);
+	libusb_free_transfer(xfer);
 	g_cond_signal(&dev->ad_cv);
 	g_mutex_unlock(&dev->ad_mtx);
 }

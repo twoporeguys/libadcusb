@@ -128,5 +128,6 @@ main(int argc, char *argv[])
 		sleep(1);
 #else
 	pause();
+	adcusb_close(dev);
 #endif
 }
