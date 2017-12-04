@@ -218,7 +218,7 @@ adcusb_close(struct adcusb_device *dev)
 	g_assert_nonnull(dev->ad_libusb);
 	dev->ad_running = false;
 
-	if (dev->ad_transfer == true)
+	if (dev->ad_transfer)
 		adcusb_stop(dev);
 
 	g_mutex_lock(&dev->ad_mtx);
@@ -230,10 +230,6 @@ adcusb_close(struct adcusb_device *dev)
 
 	if (dev->ad_callback != NULL)
 		Block_release(dev->ad_callback);
-
-	g_mutex_unlock(&dev->ad_mtx);
-	g_cond_clear(&dev->ad_cv);
-	g_mutex_clear(&dev->ad_mtx);
 
 	g_free(dev);
 }
