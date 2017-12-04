@@ -90,7 +90,6 @@ static inline int adcusb_open(adcusb_device_t *devp, const char *serial, int add
 
 			if (libusb_open(*devices, &dev->ad_handle) != 0)
 				goto fail;
-
 		} else {
 			if (libusb_get_device_descriptor(*devices, &desc) != 0)
 				continue;
@@ -181,9 +180,11 @@ adcusb_start(struct adcusb_device *dev)
 			goto fail;
 	}
 
-done:	g_mutex_unlock(&dev->ad_mtx);
+done:
+	g_mutex_unlock(&dev->ad_mtx);
 	return (0);
-fail:	g_mutex_unlock(&dev->ad_mtx);
+fail:
+	g_mutex_unlock(&dev->ad_mtx);
 	return (-1);
 }
 
@@ -205,7 +206,8 @@ adcusb_stop(struct adcusb_device *dev)
 		g_free(dev->ad_buffers[i]);
 	}
 
-done:	g_mutex_unlock(&dev->ad_mtx);
+done:
+	g_mutex_unlock(&dev->ad_mtx);
 }
 
 void
@@ -277,9 +279,10 @@ adcusb_libusb_thread(void *arg)
 	struct adcusb_device *dev = arg;
 	struct timeval tv = {0 ,0};
 
-	while (dev->ad_running)
+	while (dev->ad_running) {
 		libusb_handle_events_timeout_completed(dev->ad_libusb, &tv,
 		    NULL);
+	}
 
 	return (NULL);
 }
