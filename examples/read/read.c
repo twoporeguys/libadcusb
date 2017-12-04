@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include <inttypes.h>
 #include <errno.h>
 #include <string.h>
@@ -50,6 +51,13 @@ callback(void *arg, adcusb_device_t dev, struct adcusb_data_block *block)
 
 	(void)arg;
 	(void)dev;
+
+	if (block == NULL) {
+		/* Device was unplugged */
+		printf("Device unplugged, exiting\n");
+		kill(getpid(), SIGINT);
+	}
+
 	printf("Read block: %u samples, seqno %" PRIu64 "\n", block->adb_count,
 	    block->adb_seqno);
 }

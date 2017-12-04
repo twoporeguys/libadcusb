@@ -121,6 +121,12 @@ cdef class ADC(object):
         cdef adcusb_data_block *copied
         cdef ADCDataBlock block
 
+        if blk == NULL:
+            if callable(self.callback):
+                self.callback(None)
+
+            return
+
         block_size = sizeof(adcusb_data_block) + blk.adb_count * sizeof(uint32_t)
 
         if callable(self.callback):
