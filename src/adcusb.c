@@ -26,6 +26,7 @@
  */
 
 #include <Block.h>
+#include <errno.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <glib.h>
@@ -53,6 +54,7 @@ struct adcusb_device
 	GThread *		ad_libusb_thread;
 	bool 			ad_open;
 	bool			ad_running;
+	bool			ad_dead;
 	adcusb_callback_t 	ad_callback;
 	struct adcusb_packet *	ad_buffers[ADCUSB_NUM_XFERS];
 	int 			ad_buffer_size;
@@ -154,8 +156,15 @@ adcusb_start(struct adcusb_device *dev)
 
 	g_assert_nonnull(dev);
 
-	if (!dev->ad_open)
+	if (!dev->ad_open) {
+		errno = ENXIO;
 		goto fail;
+	}
+
+	if (dev->ad_dead) {
+		errno = EINVAL;
+		goto fail;
+	}
 
 	if (dev->ad_running)
 		goto done;
@@ -270,6 +279,7 @@ adcusb_transfer_cb(struct libusb_transfer *xfer)
 	return;
 
 unplug:
+	dev->ad_dead = true;
 	dev->ad_active_xfers_cnt--;
 	dev->ad_callback(dev, NULL);
 	g_free(xfer->buffer);
