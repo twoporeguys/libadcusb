@@ -224,9 +224,6 @@ adcusb_close(struct adcusb_device *dev)
 	g_assert_nonnull(dev->ad_handle);
 	g_assert_nonnull(dev->ad_libusb);
 
-	if (dev->ad_running)
-		adcusb_stop(dev);
-
 	dev->ad_open = false;
 
 	g_mutex_lock(&dev->ad_mtx);
