@@ -26,6 +26,7 @@
 
 import os
 import numpy as np
+from contextlib import contextmanager
 cimport numpy as np
 from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy
@@ -114,6 +115,14 @@ cdef class ADC(object):
     def stop(self):
         with nogil:
             adcusb_stop(self.dev)
+
+    @contextmanager
+    def read(self):
+        self.start()
+        try:
+            yield
+        finally:
+            self.stop()
 
     @staticmethod
     cdef void c_callback(void *arg, adcusb_device_t dev, adcusb_data_block *blk) with gil:
