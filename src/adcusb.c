@@ -228,9 +228,9 @@ adcusb_close(struct adcusb_device *dev)
 
 	g_mutex_lock(&dev->ad_mtx);
 
-	g_thread_join(dev->ad_libusb_thread);
 	libusb_release_interface(dev->ad_handle, 1);
 	libusb_close(dev->ad_handle);
+	g_thread_join(dev->ad_libusb_thread);
 	libusb_exit(dev->ad_libusb);
 
 	if (dev->ad_callback != NULL)
@@ -289,12 +289,9 @@ static void *
 adcusb_libusb_thread(void *arg)
 {
 	struct adcusb_device *dev = arg;
-	struct timeval tv = {0 ,0};
 
-	while (dev->ad_open) {
-		libusb_handle_events_timeout_completed(dev->ad_libusb, &tv,
-		    NULL);
-	}
+	while (dev->ad_open)
+		libusb_handle_events(dev->ad_libusb);
 
 	return (NULL);
 }
