@@ -52,8 +52,8 @@ struct adcusb_data_block
 };
 
 /** ADC block callback type */
-typedef void (^adcusb_callback_t)(struct adcusb_device *,
-    struct adcusb_data_block *);
+typedef void (^adcusb_callback_t)(struct adcusb_device *_Nonnull,
+    struct adcusb_data_block *_Nullable);
 
 /** Converts ordinary function pointer into a Block */
 #define	ADCUSB_CALLBACK(_fn, _arg) 					\
@@ -68,7 +68,8 @@ typedef void (^adcusb_callback_t)(struct adcusb_device *,
  * @param devp
  * @return
  */
-int adcusb_open_by_serial(const char *serial, adcusb_device_t *devp);
+int adcusb_open_by_serial(const char *_Nonnull serial,
+    _Nonnull adcusb_device_t *_Nonnull devp);
 
 /**
  * Opens a device by its address.
@@ -77,7 +78,8 @@ int adcusb_open_by_serial(const char *serial, adcusb_device_t *devp);
  * @param devp
  * @return
  */
-int adcusb_open_by_address(int address, adcusb_device_t *devp);
+int adcusb_open_by_address(int address,
+    _Nonnull adcusb_device_t *_Nonnull devp);
 
 /**
  * Sets the buffer size.
@@ -87,7 +89,7 @@ int adcusb_open_by_address(int address, adcusb_device_t *devp);
  * @param dev
  * @param bufsize Buffer size in blocks
  */
-void adcusb_set_buffer_size(adcusb_device_t dev, size_t bufsize);
+void adcusb_set_buffer_size(_Nonnull adcusb_device_t dev, size_t bufsize);
 
 /**
  * Sets the block callback function.
@@ -97,7 +99,8 @@ void adcusb_set_buffer_size(adcusb_device_t dev, size_t bufsize);
  * @param dev Device handle
  * @param cb Callback function or NULL
  */
-void adcusb_set_callback(adcusb_device_t dev, adcusb_callback_t cb);
+void adcusb_set_callback(_Nonnull adcusb_device_t dev,
+    _Nullable adcusb_callback_t cb);
 
 /**
  * Starts data acquisition.
@@ -105,20 +108,20 @@ void adcusb_set_callback(adcusb_device_t dev, adcusb_callback_t cb);
  * @param dev Device handle
  * @return 0 on success, -1 on error.
  */
-int adcusb_start(adcusb_device_t dev);
+int adcusb_start(_Nonnull adcusb_device_t dev);
 
 /**
  * Stops data acquisition.
  *
  * @param dev Device handle
  */
-void adcusb_stop(adcusb_device_t dev);
+void adcusb_stop(_Nonnull adcusb_device_t dev);
 
 /**
  * Closes device handle
  *
  * @param dev Device handle
  */
-void adcusb_close(adcusb_device_t dev);
+void adcusb_close(_Nonnull adcusb_device_t dev);
 
 #endif	/* LIBADCUSB_H */
