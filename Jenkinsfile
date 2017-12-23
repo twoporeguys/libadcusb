@@ -3,6 +3,11 @@ DOCS_PATH = '/mnt/builds/docs/libadcusb'
 pipeline {
     agent { label 'master' }
 
+    environment {
+        CC = 'clang'
+        CXX = 'clang++'
+    }
+
     stages {
         stage('Build') {
             steps {
