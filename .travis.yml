@@ -22,7 +22,7 @@ before_script:
 
 script:
 - ${EXEC} "cd /code && mkdir build"
-- ${EXEC} "cd /code/build && cmake .. -DPYTHON_VERSION=python2"
+- ${EXEC} "cd /code/build && CC=clang CXX=clang++ cmake .. -DPYTHON_VERSION=python2"
 - ${EXEC} "cd /code/build && make"
 
 deploy:
