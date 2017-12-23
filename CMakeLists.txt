@@ -10,6 +10,7 @@ set(CMAKE_C_COMPILER clang)
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_FLAGS "-fblocks -Wall -Wextra")
+option(ENABLE_UBSAN "Enable undefined behavior sanitizer" ON)
 
 find_package (PkgConfig REQUIRED)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
@@ -24,6 +25,10 @@ if(BUNDLED_BLOCKS_RUNTIME)
             ${SOURCE_FILES}
             contrib/BlocksRuntime/data.c
             contrib/BlocksRuntime/runtime.c)
+endif()
+
+if (ENABLE_UBSAN)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fsanitize=integer -fsanitize=nullability")
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
