@@ -6,8 +6,6 @@ option(BUILD_DOC "Build documentation")
 option(BUILD_PYTHON "Build and install Python extension" ON)
 
 set(PYTHON_VERSION python3 CACHE STRING "Target Python version for py-adcusb")
-set(CMAKE_C_COMPILER clang)
-set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_FLAGS "-fblocks -Wall -Wextra")
 option(ENABLE_UBSAN "Enable undefined behavior sanitizer" ON)
