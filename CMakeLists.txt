@@ -8,7 +8,7 @@ option(BUILD_PYTHON "Build and install Python extension" ON)
 set(PYTHON_VERSION python3 CACHE STRING "Target Python version for py-adcusb")
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_FLAGS "-fblocks -Wall -Wextra")
-option(ENABLE_UBSAN "Enable undefined behavior sanitizer" ON)
+option(ENABLE_UBSAN "Enable undefined behavior sanitizer")
 option(ENABLE_UBSAN_NULLABILITY "Enable nullability sanitizer")
 
 find_package (PkgConfig REQUIRED)
