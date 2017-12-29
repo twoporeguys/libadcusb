@@ -35,8 +35,7 @@ build_dir = os.path.abspath(os.getenv('BUILD_DIR'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.intersphinx',
-    'breathe'
+    'sphinx.ext.intersphinx'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -177,9 +176,3 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
 
-# -- Options for Breathe --------------------------------------------------
-breathe_projects = {
-    "libadcusb": os.path.join(build_dir, "doxygen/xml")
-}
-
-breathe_default_project = "libadcusb"

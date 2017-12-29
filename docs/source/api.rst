@@ -1,4 +1,0 @@
-C API reference
-===============
-
-.. doxygenindex::
