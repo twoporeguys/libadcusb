@@ -1,5 +1,3 @@
-DOCS_PATH = '/mnt/builds/docs/libadcusb'
-
 pipeline {
     agent { label 'master' }
 
@@ -18,10 +16,13 @@ pipeline {
         }
 
         stage('Deploy docs') {
+            when {
+                expression { "${env.DOCS_PATH}" != "" }
+            }
             steps {
-                sh "rm -rf ${DOCS_PATH}"
-                sh "mkdir -p ${DOCS_PATH}"
-                sh "cp -a build/docs/* ${DOCS_PATH}/"
+                sh "mkdir -p ${DOCS_PATH}/libadcusb"
+                sh "rm -rf ${DOCS_PATH}/libadcusb/*"
+                sh "cp -a build/docs/* ${DOCS_PATH}/libadcusb/"
             }
         }
     }
