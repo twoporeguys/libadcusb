@@ -4,8 +4,8 @@ libdir=${prefix}/lib
 sharedlibdir=${prefix}/lib
 includedir=${prefix}/include
 
-Name: librpc
+Name: libadcusb
 Description: A data acquisition library for ADC USB devices
 Version: @VERSION@
 Cflags: -I${includedir}
-Libs: -L${libdir} -lrpc
+Libs: -L${libdir} -ladcusb
