@@ -116,13 +116,16 @@ cdef class ADC(object):
         with nogil:
             adcusb_stop(self.dev)
 
-    @contextmanager
     def read(self):
-        self.start()
-        try:
-            yield
-        finally:
-            self.stop()
+        @contextmanager
+        def read_wrapped():
+            self.start()
+            try:
+                yield
+            finally:
+                self.stop()
+
+        return read_wrapped()
 
     @staticmethod
     cdef void c_callback(void *arg, adcusb_device_t dev, adcusb_data_block *blk) with gil:
