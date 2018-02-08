@@ -261,6 +261,10 @@ adcusb_transfer_cb(struct libusb_transfer *xfer)
 
 		block = (struct adcusb_data_block *)
 		    &xfer->buffer[ADCUSB_PACKET_SIZE * i];
+
+		if (block->adb_count == 0)
+			continue;
+
 		dev->ad_callback(dev, block);
 	}
 
