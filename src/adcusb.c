@@ -280,7 +280,9 @@ adcusb_transfer_cb(struct libusb_transfer *xfer)
 	return;
 
 unplug:
-	dev->ad_dead = true;
+	if (xfer->status == LIBUSB_TRANSFER_NO_DEVICE)
+		dev->ad_dead = true;
+
 	dev->ad_active_xfers_cnt--;
 	dev->ad_callback(dev, NULL);
 	g_free(xfer->buffer);
