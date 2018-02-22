@@ -198,6 +198,7 @@ done:
 	g_mutex_unlock(&dev->ad_mtx);
 	return (0);
 fail:
+	dev->ad_running = false;
 	g_mutex_unlock(&dev->ad_mtx);
 	return (-1);
 }
