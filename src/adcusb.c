@@ -169,8 +169,10 @@ adcusb_start(struct adcusb_device *dev)
 	if (dev->ad_running)
 		goto done;
 
-	if (libusb_claim_interface(dev->ad_handle, 1) != 0)
+	if (libusb_claim_interface(dev->ad_handle, 1) != 0) {
+		errno = EPERM;
 		goto fail;
+	}
 
 	dev->ad_running = true;
 
