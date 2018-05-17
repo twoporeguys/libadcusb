@@ -54,7 +54,6 @@ cdef class ADCDataBlock(object):
         cdef np.npy_intp shape[1]
         shape[0] = <np.npy_intp>self.block.adb_count
         self.ndarray = np.PyArray_SimpleNewFromData(1, shape, np.NPY_INT32, self.block.adb_samples)
-        Py_INCREF(self)
         PyArray_SetBaseObject(self.ndarray, self)
 
     property seqno:
