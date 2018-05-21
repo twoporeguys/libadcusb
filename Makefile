@@ -3,8 +3,8 @@
 export CC := clang
 export CXX := clang++
 BUILD_PYTHON := ON
-PYTHON_VERSION := "python3"
-INSTALL_PREFIX := "/usr/local"
+PYTHON_VERSION ?= "python3"
+INSTALL_PREFIX ?= "/usr/local"
 
 all:
 	mkdir -p build && \
