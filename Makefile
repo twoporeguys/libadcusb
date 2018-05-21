@@ -18,6 +18,10 @@ all:
 clean:
 	rm -rf *~ build
 
+.PHONY: bootstrap
+bootstrap:
+	@echo "No bootstrap step for this project is required."
+
 PREFIX = /usr/local
 
 .PHONY: install
