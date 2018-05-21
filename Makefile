@@ -20,7 +20,7 @@ clean:
 
 .PHONY: bootstrap
 bootstrap:
-	@echo "No bootstrap step for this project is required."
+	sh requirements.sh
 
 PREFIX = /usr/local
 
