@@ -4,13 +4,13 @@ export CC := clang
 export CXX := clang++
 BUILD_PYTHON := ON
 PYTHON_VERSION ?= "python3"
-INSTALL_PREFIX ?= "/usr/local"
+PREFIX ?= "/usr/local"
 
 all:
 	mkdir -p build && \
 	cd build && \
 	cmake .. -DPYTHON_VERSION=${PYTHON_VERSION} \
-	-DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
+	-DCMAKE_INSTALL_PREFIX=${PREFIX} \
 	-DBUILD_PYTHON=${BUILD_PYTHON} && \
 	make
 
@@ -21,8 +21,6 @@ clean:
 .PHONY: bootstrap
 bootstrap:
 	sh requirements.sh
-
-PREFIX = /usr/local
 
 .PHONY: install
 install:
