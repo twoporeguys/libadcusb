@@ -9,8 +9,8 @@ case "`uname -s`" in
 		pip3 install -r requirements.txt
 	elif [ -x /opt/local/bin/port ]; then
         	echo "I am a Mac.  Using macports to install stuff with sudo"
-        	sudo port install python36 py36-pip cmake glib gtk3 py36-gobject
-		pip-3.6 install -r requirements.txt
+        	sudo port install python36 py36-pip cmake glib2 gtk3 py36-gobject
+		sudo pip-3.6 install -r requirements.txt
 	else
 		echo "I am a Mac but you have neither macports or brew installed."
 		exit 1
