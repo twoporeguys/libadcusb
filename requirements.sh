@@ -10,7 +10,7 @@ case "`uname -s`" in
         	echo "I am a Mac.  Using macports to install stuff with sudo"
         	sudo port install python36 py36-pip cmake glib2 gtk3 py36-gobject pkgconfig
 		sudo port select --set pip pip36
-		ln -fs /opt/local/bin/pip-3.6 /opt/local/bin/pip3
+		sudo ln -fs /opt/local/bin/pip-3.6 /opt/local/bin/pip3
 	else
 		echo "I am a Mac but you have neither macports or brew installed."
 		exit 1
