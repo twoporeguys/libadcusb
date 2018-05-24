@@ -19,6 +19,7 @@ case "`uname -s`" in
     Linux*)
         echo "I am some kind of Linux, hopefully Ubuntu."
         apt-get -y install python3 cmake gtk+3
+        pip3 install -r requirements.txt
         ;;
     default)
         echo "Don't know how to set up for your OS."
