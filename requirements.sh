@@ -4,12 +4,12 @@ case "`uname -s`" in
     Darwin*)
 	if [ -x /usr/local/bin/brew ]; then
         	echo "I am a Mac.  Brew installing stuff."
-		brew install cmake glib gtk+3 libusb python3
+		brew install cmake glib gtk+3 libusb python3 pkg-config
 		brew install pygobject3 --with-python3
 		pip3 install -r requirements.txt
 	elif [ -x /opt/local/bin/port ]; then
         	echo "I am a Mac.  Using macports to install stuff with sudo"
-        	sudo port install python36 py36-pip cmake glib2 gtk3 py36-gobject
+        	sudo port install python36 py36-pip cmake glib2 gtk3 py36-gobject pkgconfig
 		sudo pip-3.6 install -r requirements.txt
 	else
 		echo "I am a Mac but you have neither macports or brew installed."
