@@ -188,8 +188,10 @@ adcusb_start(struct adcusb_device *dev)
 
 		libusb_set_iso_packet_lengths(dev->ad_xfers[i], ADCUSB_PACKET_SIZE);
 
-		if (libusb_submit_transfer(dev->ad_xfers[i]) != 0)
+		if (libusb_submit_transfer(dev->ad_xfers[i]) != 0) {
+			errno = EXDEV;
 			goto fail;
+		}
 
 		dev->ad_active_xfers_cnt++;
 	}
