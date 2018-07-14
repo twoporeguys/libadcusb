@@ -1,5 +1,35 @@
 find_program(PYTHON "${PYTHON_VERSION}")
 
+function(python_install SETUP_PY)
+    if(EXISTS "$ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}/lib/${PYTHON_VERSION}/dist-packages")
+        install(CODE "
+        execute_process(
+            COMMAND ${PYTHON} ${SETUP_PY} install
+                --record python_manifest.txt
+                --root=/\$ENV{DESTDIR}
+                --install-lib=${CMAKE_INSTALL_PREFIX}/lib/${PYTHON_VERSION}/dist-packages
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )")
+    elseif(DEFINED "$ENV{CUSTOM_PREFIX}")
+        install(CODE "
+        execute_process(
+            COMMAND ${PYTHON} ${SETUP_PY} install
+                --record python_manifest.txt
+                --root=/\$ENV{DESTDIR}
+                --prefix=${CMAKE_INSTALL_PREFIX}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )")
+    else()
+        install(CODE "
+        execute_process(
+            COMMAND ${PYTHON} ${SETUP_PY} install
+                --record python_manifest.txt
+                --root=/\$ENV{DESTDIR}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )")
+    endif()
+endfunction()
+
 set(SETUP_PY ${CMAKE_SOURCE_DIR}/python/setup.py)
 set(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/timestamp)
 set(DEPS
@@ -22,4 +52,4 @@ add_custom_command(
 
 add_custom_target(py-adcusb ALL DEPENDS ${OUTPUT})
 
-install(CODE "execute_process(COMMAND ${PYTHON} ${SETUP_PY} install --record python_manifest.txt --prefix=${CMAKE_INSTALL_PREFIX} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})")
+python_install(${SETUP_PY})
