@@ -35,6 +35,20 @@ from Cython.Distutils import build_ext
 
 os.environ['CC'] = 'clang'
 os.environ.setdefault('DESTDIR', '/')
+cflags = [
+    '-g',
+    '-fblocks',
+    '-Wno-sometimes-uninitialized',
+    os.path.expandvars('-I${CMAKE_SOURCE_DIR}/include')
+]
+
+ldflags = [
+    os.path.expandvars('-L..'),
+    os.path.expandvars('-Wl,-rpath'),
+    os.path.expandvars('-Wl,${CMAKE_PREFIX}/lib'),
+    '-ladcusb',
+]
+
 
 setup(
     name='adcusb',
@@ -46,8 +60,8 @@ setup(
         Extension(
             "adcusb",
             ["adcusb.pyx"],
-            extra_compile_args=["-fblocks", "-Wno-sometimes-uninitialized"],
-            extra_link_args=["-g", "-ladcusb"],
+            extra_compile_args=cflags,
+            extra_link_args=ldflags,
             include_dirs=[np.get_include()]
         )
     ]
