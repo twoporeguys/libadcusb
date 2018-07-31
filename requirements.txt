@@ -1,4 +1,2 @@
-Cython==0.26
-numpy==1.13.1
-scipy==0.19.1
-chardet==3.0.4
+Cython>=0.26
+numpy
