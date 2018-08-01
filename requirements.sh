@@ -19,7 +19,7 @@ case "`uname -s`" in
         ;;
     Linux*)
         echo "I am some kind of Linux, hopefully Ubuntu."
-        apt-get -y install python3 cmake gtk+3
+        apt-get -y install python3 python3-pip cmake gtk+3
         pip3 install -r requirements.txt
         ;;
     default)
