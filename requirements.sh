@@ -19,10 +19,11 @@ case "`uname -s`" in
         ;;
     Linux*)
         echo "I am some kind of Linux, hopefully Ubuntu."
-        apt-get -y install python3 python3-pip cmake
-        pip3 install -r requirements.txt
+        apt-get -y install \
+	    cmake clang python3 python3-pip python3-numpy cython3
         ;;
     default)
         echo "Don't know how to set up for your OS."
         exit 1
 esac
+
