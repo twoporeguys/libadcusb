@@ -20,8 +20,8 @@ case "`uname -s`" in
     Linux*)
         echo "I am some kind of Linux, hopefully Ubuntu."
         apt-get -y install \
-	    cmake clang libglib2.0-dev libusb-1.0-0-dev python3 python3-pip \
-	    python3-numpy python3-sphinx cython3 doxygen
+	    cmake clang libglib2.0-dev libusb-1.0-0-dev libblocksruntime-dev \
+	     python3 python3-pip python3-numpy python3-sphinx cython3 doxygen
         ;;
     default)
         echo "Don't know how to set up for your OS."
