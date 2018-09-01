@@ -40,5 +40,11 @@ pipeline {
                 sh "cp -a build/docs/* ${DOCS_PATH}/libadcusb/"
             }
         }
+
+        stage('Cleanup') {
+            steps {
+                sh 'chown -v -R 9001:9001 .'
+            }
+        }
     }
 }
