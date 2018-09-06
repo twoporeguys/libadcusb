@@ -18,7 +18,7 @@ build:
 	    -DBUILD_PYTHON=$(BUILD_PYTHON) \
 	    -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
 	    -DENABLE_RPATH=$(ENABLE_RPATH)
-	make
+	make -C build
 
 clean:
 	rm -rf *~ build
