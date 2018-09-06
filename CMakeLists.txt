@@ -12,6 +12,7 @@ set(CMAKE_C_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 option(ENABLE_UBSAN "Enable undefined behavior sanitizer")
 option(ENABLE_UBSAN_NULLABILITY "Enable nullability sanitizer")
+option(ENABLE_RPATH "Enable @rpath on macOS" ON)
 
 find_package (PkgConfig REQUIRED)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
@@ -45,7 +46,6 @@ link_directories(${GLIB_LIBRARY_DIRS})
 add_library(libadcusb SHARED ${SOURCE_FILES} ${HEADERS})
 set_target_properties(libadcusb PROPERTIES SOVERSION 1)
 set_target_properties(libadcusb PROPERTIES PREFIX "")
-set_target_properties(libadcusb PROPERTIES MACOSX_RPATH ON)
 target_link_libraries(libadcusb ${GLIB_LIBRARIES})
 target_link_libraries(libadcusb ${LIBUSB_LIBRARIES})
 configure_file(libadcusb.pc.in ${CMAKE_CURRENT_BINARY_DIR}/libadcusb.pc @ONLY)
@@ -55,6 +55,10 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libadcusb.pc DESTINATION ${CMAKE_INSTA
 
 if(NOT APPLE)
     target_link_libraries(libadcusb BlocksRuntime)
+endif()
+
+if(ENABLE_RPATH)
+    set_target_properties(libadcusb PROPERTIES MACOSX_RPATH ON)
 endif()
 
 if(BUILD_DOC)
