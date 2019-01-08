@@ -25,6 +25,8 @@
 #
 
 import os
+import sys
+from subprocess import check_output
 import numpy as np
 import Cython.Compiler.Options
 Cython.Compiler.Options.annotate = True
@@ -41,6 +43,13 @@ cflags = [
     '-Wno-sometimes-uninitialized',
     os.path.expandvars('-I${CMAKE_SOURCE_DIR}/include')
 ]
+
+if sys.platform == 'darwin':
+    # when only command-line tools are installed, distutils isn't finding the
+    # MacOS SDK dir correctly. Directly query and add to flags here
+    SDKROOT = check_output(['xcrun', '--show-sdk-path']).decode('utf-8').strip()
+    # flags at end of command have precidence over earlier ones
+    cflags.append('-isysroot{}'.format(SDKROOT))
 
 ldflags = [
     os.path.expandvars('-L..'),
